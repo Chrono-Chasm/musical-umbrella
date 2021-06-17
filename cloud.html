@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style type="text/css">
+			body{
+				height: 100vw;
+				width: 100vw;
+				display: flex;
+				flex-direction: column;
+			}
+			.line {
+				flex:1;
+				width: 100%;
+				display: flex;
+			}
+
+			.grid {
+				flex: 1;
+				height: 100%;
+				border-top: 0.5px solid #EFEFEF;
+				border-left: 0.5px solid #EFEFEF;
+				transform: scale(1.01,1.01);
+			}
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+			//定义队列
+			class Q {
+				constructor() {
+					this.dataArr = new Array();
+				}
+				empty() {
+					return this.dataArr.length == 0;
+				}
+				pop() {
+					this.dataArr.shift();
+				}
+				front() {
+					return this.dataArr[0];
+				}
+				push(t) {
+					this.dataArr.push(t);
+				}
+			}
+			class nd {
+				constructor(x, y) {
+					this.x = x;
+					this.y = y;
+				}
+			}
+			class edge {
+				constructor(x1, y1, x2, y2) {
+					this.u = new nd(x1, y1);
+					this.v = new nd(x2, y2);
+				}
+			}
+			const base=128;
+			const PI=Math.acos(-1)
+			const dphy=0.0001*PI;
+			class Color{
+				constructor(){
+					this.red=0;
+					this.green=PI/3*2;
+					this.blue=PI/3*4;
+				}
+				next_phy(phy){
+					var new_phy=phy+dphy;
+					if(new_phy>PI)new_phy-=PI;
+					return new_phy;
+				}
+				next_color(){
+					this.red=this.next_phy(this.red);
+					this.green=this.next_phy(this.green);
+					this.blue=this.next_phy(this.blue);
+				}
+				phy_to_color(phy){
+					return Math.floor((1+Math.sin(phy)*0.95)*base).toString(16);
+				}
+				to_str(){
+					var str="#";
+					str+=this.phy_to_color(this.red);
+					str+=this.phy_to_color(this.blue);
+					str+=this.phy_to_color(this.green);
+					return str;
+				}
+			}
+			class dp{
+				constructor(dot,depth){
+					this.dot=dot;
+					this.depth=depth;
+				}
+			}
+			var x = 200,
+				y = 200;
+			// 添加元素
+			for (var i = 0; i < x; i++) {
+				var d = document.createElement("div");
+				d.className = "line";
+				for (var j = 0; j < y; j++) {
+					var s = document.createElement("span");
+					s.id = "grid" + i + "-" + j;
+					s.className = "grid";
+					d.appendChild(s);
+				}
+				document.body.appendChild(d);
+			}
+
+
+
+				// 随机生成边
+			var arr = new Array();
+
+			for (var i = 1; i < x; i++) {
+				for (var j = 0; j < y; j++) {
+					arr.push(new edge(i - 1, j, i, j));
+				}
+			}
+			for (var i = 0; i < x; i++) {
+				for (var j = 1; j < y; j++) {
+					arr.push(new edge(i, j - 1, i, j));
+				}
+			}
+			function randArr(arr) {
+			    for (var i = 0; i < arr.length; i++) {
+			        var iRand = parseInt(arr.length * Math.random());
+			        var temp = arr[i];
+			        arr[i] = arr[iRand];
+			        arr[iRand] = temp;
+			    }
+			    return arr;
+			}
+			randArr(arr);
+			var father = new Array();
+			for (var i = 0; i < x; i++) {
+				father[i] = new Array();
+				for (var j = 0; j < y; j++) {
+					father[i][j] = new nd(i, j);
+				}
+			}
+			var nds = x * y;
+			var e = new Array();
+			for (var i = 0; i < x; i++) {
+				e[i] = new Array();
+				for (var j = 0; j < y; j++) {
+					e[i][j] = new Array();
+				}
+			}
+
+			function equal(a, b) {
+				return a.x == b.x && a.y == b.y;
+			}
+
+			function ff(dt) {
+				if (equal(father[dt.x][dt.y], dt)) {
+					return dt;
+				} else {
+					return father[dt.x][dt.y] = ff(father[dt.x][dt.y]);
+				}
+			}
+
+			function print(str, dt) {
+				console.log(str + dt.x + dt.y);
+			}
+
+			function uni(d1, d2) {
+				if (!equal(ff(d1) , ff(d2))) {
+					nds -= 1;
+					var f1 = ff(d1);
+					father[f1.x][f1.y] = ff(d2);
+					e[d1.x][d1.y].push(d2);
+					e[d2.x][d2.y].push(d1);
+				}
+			}
+			for (var i = 0; i < arr.length; i++) {
+				if (nds == 1) break;
+				uni(arr[i].u, arr[i].v);
+			}
+			var visited = new Array();
+			for (var i = 0; i < x; i++) {
+				visited[i] = new Array();
+				for (var j = 0; j < y; j++) {
+					visited[i][j] = false;
+				}
+			}
+			var q = new Q();
+			var begin = new nd(Math.floor(Math.random()*x),Math.floor(Math.random()*x));
+			q.push(new dp(begin,0));
+			var cl=new Color();
+			cl.next_color();
+			var old=0;
+			function sleep(){
+				
+			}
+			function replace_color(i,j,depth){
+				var obj=document.getElementById("grid"+i+"-"+j);
+				obj.style.backgroundColor=cl.to_str();
+				if(depth!=old){
+					cl.next_color();
+					depth=old;
+				}
+				sleep();
+			}
+			function bfs() {
+				while (!q.empty()) {
+					var now = q.front().dot;
+					var depth=q.front().depth+1;
+					q.pop();
+					for (var i = 0; i < e[now.x][now.y].length; i++) {
+						var nxt = e[now.x][now.y][i];
+						if (nxt.x >= 0 && nxt.x < x && nxt.y >= 0 && nxt.y < y) {
+							if (!visited[nxt.x][nxt.y]) {
+								visited[nxt.x][nxt.y] = true;
+								replace_color(nxt.x,nxt.y,depth);
+								q.push(new dp(nxt,depth));
+							}
+						}
+					}
+				}
+			}
+			visited[begin.x][begin.y]=true;
+			replace_color(begin.x,begin.y,0);
+			bfs();
+		</script>
+	</body>
+</html>
