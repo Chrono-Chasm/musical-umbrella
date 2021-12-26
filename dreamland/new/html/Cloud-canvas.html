@@ -15,7 +15,7 @@
 <body>
     <script type="text/javascript">
         function getItem(id, dft) {
-            var value = localStorage.getItem("id");
+            var value = localStorage.getItem(id);
             if (value == undefined) return dft;
             return parseInt(value);
         }
