@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cloud</title>
+    <style>
+        .word {
+            color: black;
+            text-decoration: none;
+            display: inline-block;
+            transition: transfrom 1s;
+
+        }
+
+        .word_base {
+            width: auto;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #words {
+            position: relative;
+            margin-left: auto;
+            margin-right: auto;
+            height: 550px;
+            width: 550px;
+            /* background-color: rgb(199, 42, 42); */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="words"></div>
+    <!-- <div id="stderr" style="position:absolute;left:0px;bottom:0px">233</div> -->
+    <script>
+        "use strict";
+        function getElementViewPosition(element) {
+            var actualLeft = element.offsetLeft;
+            var current = element.offsetParent;
+            while (current !== null) {
+                actualLeft += (current.offsetLeft + current.clientLeft);
+                current = current.offsetParent;
+            }
+            if (document.compatMode == "BackCompat") {
+                var elementScrollLeft = document.body.scrollLeft;
+            } else {
+                var elementScrollLeft = document.documentElement.scrollLeft;
+            }
+            var left = actualLeft - elementScrollLeft;
+            var actualTop = element.offsetTop;
+            var current = element.offsetParent;
+            while (current !== null) {
+                actualTop += (current.offsetTop + current.clientTop);
+                current = current.offsetParent;
+            }
+            if (document.compatMode == "BackCompat") {
+                var elementScrollTop = document.body.scrollTop;
+            } else {
+                var elementScrollTop = document.documentElement.scrollTop;
+            }
+            var right = actualTop - elementScrollTop;
+            //返回结果
+            return { x: left, y: right }
+        }
+        class vector {
+            constructor(a, b, c) {
+                this.data = [a, b, c];
+            }
+            dot_mul(vec) {
+                var ans = 0;
+                for (var i = 0; i < 3; i++)
+                    ans += this.data[i] * vec.data[i];
+                return ans;
+            }
+            cross_mul(vec) {
+                var x1 = this.data[0], y1 = this.data[1], z1 = this.data[2];
+                var x2 = vec.data[0], y2 = vec.data[1], z2 = vec.data[2];
+                return new vector(
+                    y1 * z2 - y2 * z1,
+                    z1 * x2 - z2 * x1,
+                    x1 * y2 - x2 * y1
+                );
+            }
+            mul(n) {
+                return new vector(this.data[0] * n, this.data[1] * n, this.data[2] * n);
+            }
+            plus(vec) {
+                return new vector(
+                    this.data[0] + vec.data[0],
+                    this.data[1] + vec.data[1],
+                    this.data[2] + vec.data[2]
+                );
+            }
+            rotate(vec) {
+                var len = Math.sqrt(vec.dot_mul(vec));
+                var k = vec.mul(1 / len);
+                return this.mul(Math.cos(len))
+                    .plus(k.mul((1 - Math.cos(len)) * (this.dot_mul(k))))
+                    .plus(k.cross_mul(this).mul(Math.sin(len)));
+            }
+        }
+        var n = 100;
+        var phi = 0.618034;
+        var pos = new Array();
+        var a = new Array();
+        var text = [
+            "李超线段树",
+            "9ls线段树",
+            "RMQ in O(n)/O(1)",
+            "treap之外的平衡树",
+            "动态树",
+            "小波树",
+            "归并树",
+            "二项堆",
+            "斐波那契堆",
+            "左偏树",
+            "支配树",
+            "边三连通分量 in O(n)",
+            "第k短路",
+            "带花树算法",
+            "一般图最大权匹配",
+            "预留推进",
+            "MCMF in O(poly(V,E))",
+            "MST in O(ElogV)",
+            "后缀树",
+            "在线二维凸包",
+            "三维凸包",
+            "半平面交",
+            // "Voronoi diagram / Delaunay triangulation",
+            // "幂指曲线上的操作 (exp, log, sqrt, ...)",
+            "生成函数",
+            "Lagrange反演",
+            // "That derivative magic by Elegia",
+            // "That new subset convolution derivative magic by Elegia",
+            // "How Elegia's mind works",
+            "Sweepline Mo",
+            "拟阵交",
+        ];
+        n = text.length;
+        for (var i = 1; i <= n; i++) {
+            var z = (2 * i - 1) / n - 1;
+            var x = Math.sqrt(1 - z * z) * Math.cos(2 * Math.PI * i * phi);
+            var y = Math.sqrt(1 - z * z) * Math.sin(2 * Math.PI * i * phi);
+            var div = document.createElement("div");
+            a[i] = document.createElement("a");
+            a[i].href = "#";
+            a[i].innerHTML = text[i - 1];
+            a[i].setAttribute("class", "word");
+            div.appendChild(a[i]);
+            div.setAttribute("class", "word_base");
+            document.getElementById("words").appendChild(div);
+            pos[i] = new vector(x, y, z);
+        }
+        var viewing_dis = 40;
+        function mapping(vec) {
+            var _x = vec.data[0], _y = vec.data[1], _z = vec.data[2];
+            return { x: _x / (_y + viewing_dis) * viewing_dis, y: _z / (_y + viewing_dis) * viewing_dis, size: 1 / (_y + viewing_dis) * viewing_dis };
+        }
+        var xxx = 0.1;
+        var base = 0;
+        var cnt = 0, theta = 10;
+
+        var word_base = document.getElementsByClassName("word_base")[0]
+        var center = getElementViewPosition(word_base);
+        center.x += word_base.clientWidth / 2;
+        center.y += word_base.clientHeight / 2;
+        var mouse = { x: center.x + 100, y: center.y + 100 };
+        var cnt = 0;
+        (function animation() {
+            var loc = { x: mouse.x, y: mouse.y };
+            loc.x -= center.x;
+            loc.y -= center.y;
+            if (loc.x * loc.x + loc.y * loc.y < 10000) {
+                loc
+            }
+            loc.x /= 10000;
+            loc.y /= 10000;
+            for (var i = 1; i <= n; i++) {
+                var p = mapping(pos[i] = pos[i].rotate(new vector(loc.y, 0, loc.x)));
+                base += Math.exp(-cnt++ / 1000) / 4;
+                p.x *= base;
+                p.y *= base;
+                a[i].setAttribute("style", "transform:translate(" + p.x + "px," + (-p.y) + "px);");
+            }
+            window.requestAnimationFrame(animation);
+        })();
+        window.onmousemove = function (i) {
+            i = i || window.event;
+            mouse.x = i.clientX; mouse.y = i.clientY;
+        }
+    </script>
+</body>
+
+</html>
