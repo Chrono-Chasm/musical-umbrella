@@ -31,14 +31,14 @@
             width: 550px;
             /* background-color: rgb(199, 42, 42); */
         }
-    </style>
+        </style>
 </head>
 
 <body>
     <div id="words"></div>
     <!-- <div id="stderr" style="position:absolute;left:0px;bottom:0px">233</div> -->
     <script>
-        "use strict";
+        // 获取元素位置
         function getElementViewPosition(element) {
             var actualLeft = element.offsetLeft;
             var current = element.offsetParent;
@@ -64,12 +64,14 @@
                 var elementScrollTop = document.documentElement.scrollTop;
             }
             var right = actualTop - elementScrollTop;
-            //返回结果
             return { x: left, y: right }
         }
+    </script>
+    <script>
+        // vector （向量）
         class vector {
-            constructor(a, b, c) {
-                this.data = [a, b, c];
+            constructor(element, b, c) {
+                this.data = [element, b, c];
             }
             dot_mul(vec) {
                 var ans = 0;
@@ -104,10 +106,65 @@
                     .plus(k.cross_mul(this).mul(Math.sin(len)));
             }
         }
-        var n = 100;
-        var phi = 0.618034;
-        var pos = new Array();
-        var a = new Array();
+    </script>
+    <script>
+        // 将点vec透视投影
+        const viewing_dis = 40;
+        function mapping(vec) {
+            var _x = vec.data[0], _y = vec.data[1], _z = vec.data[2];
+            return { x: _x / (_y + viewing_dis) * viewing_dis, y: _z / (_y + viewing_dis) * viewing_dis, size: 1 / (_y + viewing_dis) * viewing_dis };
+        }
+    </script>
+    <script>
+        // generator
+        function generate(element, R = 550) {
+            const phi = 0.618034;
+            var n;
+            var pos = new Array();
+            n = element.length;
+            for (var i = 0; i < n; i++) {
+                var z = (2 * (i + 1) - 1) / n - 1;
+                var x = Math.sqrt(1 - z * z) * Math.cos(2 * Math.PI * (i + 1) * phi);
+                var y = Math.sqrt(1 - z * z) * Math.sin(2 * Math.PI * (i + 1) * phi);
+                pos[i] = new vector(x, y, z);
+            }
+            for (var i = 0; i < n; i++) {
+                var div = document.createElement("div");
+                element[i].setAttribute("class", "word");
+                div.appendChild(element[i]);
+                div.setAttribute("class", "word_base");
+                document.getElementById("words").appendChild(div);
+            }
+            var base = 0, cnt = 0;
+
+            var word_base = document.getElementsByClassName("word_base")[0]
+            var center = getElementViewPosition(word_base);
+            center.x += word_base.clientWidth / 2;
+            center.y += word_base.clientHeight / 2;
+
+            var mouse = { x: center.x + 100, y: center.y + 100 };
+            var cnt = 0;
+            (function animation() {
+                var loc = { x: (mouse.x - center.x) / 10000, y: (mouse.y - center.y) / 10000 };
+                for (var i = 0; i < n; i++) {
+                    //用于实现球体一开始膨胀的效果
+                    base += Math.exp(-cnt++ / 1000) / (4 * 550) * R;
+                    var p = mapping(pos[i] = pos[i].rotate(new vector(loc.y, 0, loc.x)));
+                    p.x *= base;
+                    p.y *= base;
+                    element[i].setAttribute("style", "transform:translate(" + p.x + "px," + (-p.y) + "px);");
+                }
+                window.requestAnimationFrame(animation);
+            })();
+
+            window.onmousemove = function (i) {
+                i = i || window.event;
+                mouse.x = i.clientX; mouse.y = i.clientY;
+            }
+        }
+    </script>
+    <script>
+        "use strict";
         var text = [
             "李超线段树",
             "9ls线段树",
@@ -141,58 +198,12 @@
             "Sweepline Mo",
             "拟阵交",
         ];
-        n = text.length;
-        for (var i = 1; i <= n; i++) {
-            var z = (2 * i - 1) / n - 1;
-            var x = Math.sqrt(1 - z * z) * Math.cos(2 * Math.PI * i * phi);
-            var y = Math.sqrt(1 - z * z) * Math.sin(2 * Math.PI * i * phi);
-            var div = document.createElement("div");
-            a[i] = document.createElement("a");
-            a[i].href = "#";
-            a[i].innerHTML = text[i - 1];
-            a[i].setAttribute("class", "word");
-            div.appendChild(a[i]);
-            div.setAttribute("class", "word_base");
-            document.getElementById("words").appendChild(div);
-            pos[i] = new vector(x, y, z);
+        var element = new Array();
+        for (var i = 0; i < text.length; i++) {
+            element[i] = document.createElement("a");
+            element[i].innerHTML = text[i];
         }
-        var viewing_dis = 40;
-        function mapping(vec) {
-            var _x = vec.data[0], _y = vec.data[1], _z = vec.data[2];
-            return { x: _x / (_y + viewing_dis) * viewing_dis, y: _z / (_y + viewing_dis) * viewing_dis, size: 1 / (_y + viewing_dis) * viewing_dis };
-        }
-        var xxx = 0.1;
-        var base = 0;
-        var cnt = 0, theta = 10;
-
-        var word_base = document.getElementsByClassName("word_base")[0]
-        var center = getElementViewPosition(word_base);
-        center.x += word_base.clientWidth / 2;
-        center.y += word_base.clientHeight / 2;
-        var mouse = { x: center.x + 100, y: center.y + 100 };
-        var cnt = 0;
-        (function animation() {
-            var loc = { x: mouse.x, y: mouse.y };
-            loc.x -= center.x;
-            loc.y -= center.y;
-            if (loc.x * loc.x + loc.y * loc.y < 10000) {
-                loc
-            }
-            loc.x /= 10000;
-            loc.y /= 10000;
-            for (var i = 1; i <= n; i++) {
-                var p = mapping(pos[i] = pos[i].rotate(new vector(loc.y, 0, loc.x)));
-                base += Math.exp(-cnt++ / 1000) / 4;
-                p.x *= base;
-                p.y *= base;
-                a[i].setAttribute("style", "transform:translate(" + p.x + "px," + (-p.y) + "px);");
-            }
-            window.requestAnimationFrame(animation);
-        })();
-        window.onmousemove = function (i) {
-            i = i || window.event;
-            mouse.x = i.clientX; mouse.y = i.clientY;
-        }
+        generate(element, 550);
     </script>
 </body>
 
