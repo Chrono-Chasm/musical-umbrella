@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="dfs bfs cloud 云 扩散 好看 深搜 广搜 并查集 生成树" />
+    <title>导航页</title>
+    <style type="text/css">
+        * {
+            color: #444;
+        }
+
+        body {
+            display: flex;
+            height: 97vh;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .body {
+            height: 480px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .main {
+            display: inline-block;
+            width: 300px;
+            height: 380px;
+            box-shadow: 0px 5px 15px 15px #EAEFFE;
+            margin: 30px 30px;
+            padding: 20px 0;
+            border-radius: 10px;
+        }
+
+
+        .main>div {
+            height: 25%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .button_div {
+            height: 10% !important;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 5px 15px;
+        }
+
+        .button_div>input {
+            width: 100%;
+            border: 1px solid #EFEFEF;
+            border-radius: 7px;
+        }
+
+        .main>div>div {
+            flex: 1;
+            padding: 5px 15px;
+        }
+
+        .main>div>div>input {
+            width: 97%;
+            border: 1px solid #c5cadb;
+        }
+
+        @media only screen and (max-width: 800px) {
+            .body {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="body">
+        <div class="main">
+            <div>
+                <div class="explanation">
+                    变色速率
+                </div>
+                <div>
+                    <input type="range" name="color_change_rate_range" id="color_change_rate_range" min="1" max="100"
+                        onchange="set('color_change_rate',this.value)" />
+                </div>
+                <div>
+                    <input type="number" name="color_change_rate_num" id="color_change_rate_num"
+                        onchange="set('color_change_rate',this.value)" />
+                </div>
+            </div>
+            <div>
+                <div class="explanation">
+                    像素大小
+                </div>
+                <div>
+                    <input type="range" name="pixel_size_range" id="pixel_size_range" min="1" max="30"
+                        onchange="set('pixel_size',this.value)" />
+                </div>
+                <div>
+                    <input type="number" name="pixel_size_num" id="pixel_size_num"
+                        onchange="set('pixel_size',this.value)" />
+                </div>
+            </div>
+
+            <div>
+                <div class="explanation">
+                    涂色速率
+                </div>
+                <div>
+                    <input type="range" name="coloring_speed_range" id="coloring_speed_range" min="1" max="22"
+                        onchange="set('coloring_speed',this.value*this.value*this.value)" />
+                </div>
+                <div>
+                    <input type="number" name="coloring_speed_num" id="coloring_speed_num"
+                        onchange="set('coloring_speed',this.value)" />
+                </div>
+            </div>
+            <div class="button_div">
+                <input type="button" name="launch" id="launch" value="运行"
+                    onclick="window.open('./Cloud-canvas.html')" />
+            </div>
+            <div class="button_div">
+                <input type="button" name="reset" id="reset" value="重置" />
+            </div>
+        </div>
+        <script>
+            function set(id, value) {
+                localStorage.setItem(id, value);
+                document.getElementById(id + "_num").value = value;
+                if (id == "coloring_speed") document.getElementById(id + "_range").value = Math.round(Math.pow(value, 1 / 3));
+                else document.getElementById(id + "_range").value = value;
+            }
+        </script>
+        <script type="text/javascript">
+            function getItem(id, dft) {
+                var value = localStorage.getItem("id");
+                if (value == undefined) return dft;
+                return parseInt(value);
+            }
+            var color_change_rate = getItem('color_change_rate', 10);
+            var pixel_size = getItem("pixel_size", 3);
+            var coloring_speed = getItem("coloring_speed", 216);
+            set("color_change_rate", color_change_rate);
+            set("pixel_size", pixel_size);
+            set("coloring_speed", coloring_speed);
+            document.getElementById("reset").onclick = function () {
+                color_change_rate = 10;
+                pixel_size = 3;
+                coloring_speed = 216;
+                set("color_change_rate", color_change_rate);
+                set("pixel_size", pixel_size);
+                set("coloring_speed", coloring_speed);
+            }
+        </script>
+    </div>
+</body>
+
+</html>

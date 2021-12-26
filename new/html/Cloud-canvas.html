@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="../css/layout.css">
+    <script src="../js/color.js"></script>
+    <script src="../js/queue.js"></script>
+    <script src="../js/randArr.js"></script>
+    <script src="../js/DSU.js"></script>
+</head>
+<canvas id="draw_cloud" width="300" height="300"></canvas>
+
+<body>
+    <script type="text/javascript">
+        function getItem(id, dft) {
+            var value = localStorage.getItem("id");
+            if (value == undefined) return dft;
+            return parseInt(value);
+        }
+        var color_change_rate = getItem('color_change_rate', 10);
+        var pixel_size = getItem("pixel_size", 3);
+        var coloring_speed = getItem("coloring_speed", 216);
+        color_change_rate /= 10;
+
+        var canvas = document.getElementById("draw_cloud");
+        var ctx = canvas.getContext("2d");
+        var maxx = (canvas.width = Math.floor(document.body.clientWidth / pixel_size)),
+            maxy = (canvas.height = Math.floor(document.body.clientHeight / pixel_size));
+        function id(x, y) {
+            return x * maxy + y;
+        }
+        class edge {
+            constructor(x1, y1, x2, y2) {
+                this.u = id(x1, y1);
+                this.v = id(x2, y2);
+            }
+        }
+        class dot_with_depth {
+            constructor(dot, depth) {
+                this.dot = dot;
+                this.depth = depth;
+            }
+        }
+
+        var e = new Array(nds);
+        var visited = new Array(nds).fill(false);
+
+        {
+            var arr = new Array();
+            for (var i = 1; i < maxx; i++) {
+                for (var j = 0; j < maxy; j++) {
+                    arr.push(new edge(i - 1, j, i, j));
+                }
+            }
+            for (var i = 0; i < maxx; i++) {
+                for (var j = 1; j < maxy; j++) {
+                    arr.push(new edge(i, j - 1, i, j));
+                }
+            }
+            randArr(arr);
+            var dsu = new DSU(maxx * maxy);
+            var nds = maxx * maxy;
+            for (var i = 0; i < nds; i++) { e[i] = new Array(); }
+            function _union(d1, d2) {
+                if (!dsu.Union(d1, d2)) return;
+                nds--;
+                e[d1].push(d2);
+                if (e[d2] == undefined) {
+                    debugger;
+                }
+                e[d2].push(d1);
+            }
+            for (var i = 0; i < arr.length; i++) {
+                if (nds == 1) break;
+                _union(arr[i].u, arr[i].v);
+            }
+        }
+        var q = new Queue();
+        var begin = id(
+            Math.floor(Math.random() * maxx),
+            Math.floor(Math.random() * maxy)
+        );
+        var cl = new Color(0.0005 * Math.PI * color_change_rate);
+        cl.next_color();
+        var old = 0;
+        function replace_color(pos) {
+            var i = parseInt(pos / maxy), j = (pos % maxy);
+            ctx.fillStyle = cl.to_str();
+            ctx.fillRect(i - 0.1, j - 0.1, 1 + 0.2, 1 + 0.2);
+        }
+        function bfs() {
+            while (!q.empty()) {
+                var now = q.front().dot;
+                var depth = q.front().depth + 1;
+                q.pop();
+                for (var i = 0; i < e[now].length; i++) {
+                    var nxt = e[now][i];
+                    if (visited[nxt]) continue;
+                    visited[nxt] = true;
+                    q.push(new dot_with_depth(nxt, depth));
+                }
+            }
+        }
+        visited[begin] = true;
+        replace_color(parseInt(begin / maxy), begin % maxy, 0);
+        q.push(-1, -1), q.pop();
+        q.push(new dot_with_depth(begin, 0));
+        bfs();
+        var p = 1;
+        (function Animation() {
+            for (var stop = Math.min(p + coloring_speed + 1, maxx * maxy); p < stop; p++) {
+                replace_color(q.dataArr[p].dot);
+                if (q.dataArr[p].depth != q.dataArr[p - 1].depth)
+                    cl.next_color();
+            }
+            if (p < maxx * maxy)
+                window.requestAnimationFrame(Animation);
+        })();
+    </script>
+</body>
+
+</html>
