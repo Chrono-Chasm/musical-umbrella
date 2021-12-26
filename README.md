@@ -7,3 +7,6 @@
 2021/12/26
 视频找到了！BV1tK4y1W777
 并且重构了代码，这回可以更快速地完成动画了
+词云上传完成
+https://chrono-chasm.github.io/musical-umbrella/dreamland/new/html/index.html
+https://chrono-chasm.github.io/musical-umbrella/word_cloud/index.html
